@@ -4,79 +4,116 @@ import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Step1Account } from '@/components/auth/steps/Step1Account'
-import { Step2Professional } from './steps/Step2Professional'
-import { Step3Location } from '@/components/auth/steps/Step3Location'
-import { Step4Photo } from '@/components/auth/steps/Step4Photo'
-import { StepIndicator } from '@/components/shared/StepIndicator'
+import { RegistrationStepper } from '@/components/auth/RegistrationStepper'
+import { Step1AccountInfo, type Step1Values } from '@/components/auth/Step1AccountInfo'
+import { Step2Location, type Step2Values } from '@/components/auth/Step2Location'
+import { Step3PersonalPhoto, type Step3Values } from '@/components/auth/Step3PersonalPhoto'
+import { Step4Payment, type Step4Values } from '@/components/auth/Step4Payment'
 import { signUpWithEmail } from '@/lib/firebase/auth'
-import { createMember } from '@/lib/firebase/firestore'
+import { createMember, createPaymentSubmission, updateMember } from '@/lib/firebase/firestore'
 import { useAuthStore } from '@/stores/authStore'
-import type { RegistrationFormData } from '@/types'
 
-const TOTAL_STEPS = 4
-
-type PartialFormData = Partial<RegistrationFormData>
+// ── Accumulated form state across steps ───────────────────────────────────
+interface RegState {
+  step1?: Step1Values
+  step2?: Step2Values
+  step3?: Step3Values
+}
 
 export function RegisterForm() {
   const t = useTranslations()
   const locale = useLocale()
   const router = useRouter()
   const { setUser, setMember } = useAuthStore()
+
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState<PartialFormData>({})
+  const [regState, setRegState] = useState<RegState>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleStep1Complete = (data: Pick<RegistrationFormData, 'email' | 'password' | 'confirmPassword'>) => {
-    setFormData((prev) => ({ ...prev, ...data }))
+  // ── Step handlers ────────────────────────────────────────────────────────
+
+  const handleStep1 = (data: Step1Values) => {
+    setRegState((prev) => ({ ...prev, step1: data }))
     setCurrentStep(2)
   }
 
-  const handleStep2Complete = (data: Pick<RegistrationFormData, 'fullName' | 'fullNameBn' | 'designation' | 'regNumber' | 'bloodGroup'>) => {
-    setFormData((prev) => ({ ...prev, ...data }))
+  const handleStep2 = (data: Step2Values) => {
+    setRegState((prev) => ({ ...prev, step2: data }))
     setCurrentStep(3)
   }
 
-  const handleStep3Complete = (data: Pick<RegistrationFormData, 'mobile' | 'whatsapp' | 'division' | 'district' | 'upazila' | 'institution' | 'officeAddress'>) => {
-    setFormData((prev) => ({ ...prev, ...data }))
+  const handleStep3 = (data: Step3Values) => {
+    setRegState((prev) => ({ ...prev, step3: data }))
     setCurrentStep(4)
   }
 
-  const handleStep4Complete = async (photoBase64?: string) => {
-    const finalData = { ...formData, profilePhotoBase64: photoBase64 } as RegistrationFormData
-    setIsSubmitting(true)
+  const handleStep4 = async (paymentData: Step4Values) => {
+    const { step1, step2, step3 } = regState
+    if (!step1 || !step2 || !step3) {
+      toast.error(t('errors.unknown'))
+      return
+    }
 
+    setIsSubmitting(true)
     try {
-      // 1. Create Firebase Auth user
-      const credential = await signUpWithEmail(finalData.email, finalData.password)
+      // 1. Create Firebase Auth user — use mobile as a fallback identifier
+      //    Email may be absent (optional field), so construct a synthetic one if needed
+      const authEmail = step1.email && step1.email.trim()
+        ? step1.email.trim()
+        : `${step1.mobile.replace(/\D/g, '')}@medconnectbd.app`
+
+      const credential = await signUpWithEmail(authEmail, step1.password)
       const user = credential.user
       setUser(user)
 
-      // 2. Create Firestore member doc
       const now = new Date().toISOString()
+
+      // 2. Create /members/{uid} with status: 'pending_payment'
       const memberData = {
-        fullName: finalData.fullName,
-        fullNameBn: finalData.fullNameBn,
-        designation: finalData.designation,
-        regNumber: finalData.regNumber,
-        bloodGroup: finalData.bloodGroup,
-        mobile: finalData.mobile,
-        whatsapp: finalData.whatsapp ?? '',
-        division: finalData.division,
-        district: finalData.district,
-        upazila: finalData.upazila,
-        institution: finalData.institution,
-        officeAddress: finalData.officeAddress,
-        profilePhotoBase64: finalData.profilePhotoBase64 ?? '',
+        fullName: step1.fullName,
+        fullNameBn: step1.fullNameBn,
+        designation: step1.designation,
+        regNumber: step1.regNumber,
+        mobile: step1.mobile,
+        email: step1.email ?? authEmail,
+        division: step2.division,
+        district: step2.district,
+        upazila: step2.upazila,
+        institution: step2.institution,
+        officeAddress: step2.officeAddress,
+        whatsapp: step2.whatsapp ?? '',
+        bloodGroup: step3.bloodGroup,
+        lastDonateDate: step3.lastDonateDate,
+        profilePhotoBase64: step3.profilePhotoBase64 ?? '',
         status: 'pending_payment' as const,
         isVerified: false,
         favorites: [],
         updatedAt: now,
-        email: finalData.email,
       }
 
       await createMember(user.uid, memberData)
-      setMember({ ...memberData, uid: user.uid, joinedAt: now })
+
+      // 3. Create /payments/{auto-id} with payment submission data
+      await createPaymentSubmission({
+        uid: user.uid,
+        memberName: step1.fullName,
+        mobile: step1.mobile,
+        amount: 0, // will be filled from appConfig but we pass the field
+        bkashTrxId: paymentData.bkashTrxId,
+        bkashSenderNumber: paymentData.bkashSenderNumber,
+        screenshotBase64: paymentData.screenshotBase64,
+      })
+
+      // 4. Update member status to 'pending_approval'
+      await updateMember(user.uid, { status: 'pending_approval' })
+
+      setMember({
+        ...memberData,
+        uid: user.uid,
+        joinedAt: now,
+        updatedAt: now,
+        status: 'pending_approval',
+      })
 
       toast.success(t('registration.successTitle'))
       router.push(`/${locale}/register/pending`)
@@ -90,32 +127,36 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="space-y-6">
-      <StepIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+    <div className="space-y-5">
+      <RegistrationStepper currentStep={currentStep} />
 
       {currentStep === 1 && (
-        <Step1Account
-          defaultValues={formData}
-          onComplete={handleStep1Complete}
+        <Step1AccountInfo
+          defaultValues={regState.step1}
+          onComplete={handleStep1}
         />
       )}
-      {currentStep === 2 && (
-        <Step2Professional
-          defaultValues={formData}
-          onComplete={handleStep2Complete}
+
+      {currentStep === 2 && regState.step1 && (
+        <Step2Location
+          defaultValues={regState.step2}
+          mobileNumber={regState.step1.mobile}
+          onComplete={handleStep2}
           onBack={() => setCurrentStep(1)}
         />
       )}
+
       {currentStep === 3 && (
-        <Step3Location
-          defaultValues={formData}
-          onComplete={handleStep3Complete}
+        <Step3PersonalPhoto
+          defaultValues={regState.step3}
+          onComplete={handleStep3}
           onBack={() => setCurrentStep(2)}
         />
       )}
+
       {currentStep === 4 && (
-        <Step4Photo
-          onComplete={handleStep4Complete}
+        <Step4Payment
+          onComplete={handleStep4}
           onBack={() => setCurrentStep(3)}
           isSubmitting={isSubmitting}
         />

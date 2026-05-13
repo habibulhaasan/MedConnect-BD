@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import { PaymentPendingCard } from '@/components/auth/PaymentPendingCard'
+import { PendingApprovalPage } from '@/components/auth/PendingApprovalPage'
 
-export const metadata: Metadata = { title: 'Payment Pending' }
+export const metadata: Metadata = { title: 'Registration Pending' }
 
 export default function PendingPage() {
-  return <PaymentPendingCard />
+  return <PendingApprovalPage />
 }
