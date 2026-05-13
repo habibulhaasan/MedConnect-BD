@@ -1,8 +1,33 @@
-import type { NextConfig } from "next";
+import createNextIntlPlugin from 'next-intl/plugin'
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
-};
+const withNextIntl = createNextIntlPlugin('./src/i18n.ts')
 
-export default nextConfig;
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  typescript: {
+    tsconfigPath: './tsconfig.json',
+  },
+  images: {
+    // No external image domains needed — all photos are base64 Firestore
+    unoptimized: false,
+  },
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ]
+  },
+}
+
+export default withNextIntl(nextConfig)
