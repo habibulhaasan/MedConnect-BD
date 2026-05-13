@@ -1,25 +1,131 @@
 {
-  "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "radix-nova",
-  "rsc": true,
-  "tsx": true,
-  "tailwind": {
-    "config": "tailwind.config.ts",
-    "css": "src/app/globals.css",
-    "baseColor": "neutral",
-    "cssVariables": true,
-    "prefix": ""
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "style": {
+      "type": "string",
+      "enum": [
+        "default",
+        "new-york",
+        "radix-vega",
+        "radix-nova",
+        "radix-maia",
+        "radix-lyra",
+        "radix-mira",
+        "radix-luma",
+        "radix-sera",
+        "base-vega",
+        "base-nova",
+        "base-maia",
+        "base-lyra",
+        "base-mira",
+        "base-luma",
+        "base-sera"
+      ]
+    },
+    "tailwind": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "type": "string"
+        },
+        "css": {
+          "type": "string"
+        },
+        "baseColor": {
+          "type": "string"
+        },
+        "cssVariables": {
+          "type": "boolean"
+        },
+        "prefix": {
+          "type": "string"
+        }
+      },
+      "required": ["config", "css", "baseColor", "cssVariables"]
+    },
+    "rsc": {
+      "type": "boolean"
+    },
+    "tsx": {
+      "type": "boolean"
+    },
+    "iconLibrary": {
+      "type": "string"
+    },
+    "aliases": {
+      "type": "object",
+      "properties": {
+        "utils": {
+          "type": "string"
+        },
+        "components": {
+          "type": "string"
+        },
+        "ui": {
+          "type": "string"
+        },
+        "lib": {
+          "type": "string"
+        },
+        "hooks": {
+          "type": "string"
+        }
+      },
+      "required": ["utils", "components"]
+    },
+    "menuColor": {
+      "type": "string",
+      "enum": [
+        "default",
+        "inverted",
+        "default-translucent",
+        "inverted-translucent"
+      ]
+    },
+    "menuAccent": {
+      "type": "string",
+      "enum": ["subtle", "bold"]
+    },
+    "rtl": {
+      "type": "boolean"
+    },
+    "registries": {
+      "type": "object",
+      "patternProperties": {
+        "^@": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "\\{name\\}"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "pattern": "\\{name\\}"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "headers": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["url"]
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
   },
-  "iconLibrary": "lucide",
-  "rtl": false,
-  "aliases": {
-    "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
-  },
-  "menuColor": "default",
-  "menuAccent": "subtle",
-  "registries": {}
+  "required": ["style", "tailwind", "rsc", "aliases"]
 }
