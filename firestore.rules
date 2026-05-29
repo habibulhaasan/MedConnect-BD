@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ─────────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+        && request.auth.token.get('admin', false) == true;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isActiveMember() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isValidMemberCreate() {
+      let d = request.resource.data;
+      return d.uid == request.auth.uid
+        && d.status == 'pending_payment'
+        && d.isVerified == false
+        && d.keys().hasAll([
+          'uid', 'fullName', 'fullNameBn', 'designation', 'regNumber',
+          'mobile', 'division', 'district', 'upazila',
+          'institution', 'officeAddress', 'bloodGroup',
+          'status', 'isVerified', 'favorites', 'joinedAt', 'updatedAt'
+        ]);
+    }
+
+    function isValidMemberUpdate() {
+      // Members cannot change these fields themselves
+      let immutable = ['status', 'isVerified', 'regNumber', 'uid', 'joinedAt'];
+      return !request.resource.data.diff(resource.data)
+               .affectedKeys()
+               .hasAny(immutable);
+    }
+
+    function isValidPaymentCreate() {
+      let d = request.resource.data;
+      return d.uid == request.auth.uid
+        && d.status == 'submitted'
+        && d.keys().hasAll([
+          'uid', 'memberName', 'mobile', 'amount',
+          'bkashTrxId', 'bkashSenderNumber', 'status', 'submittedAt'
+        ])
+        && d.bkashTrxId.size() >= 8
+        && d.bkashTrxId.size() <= 20
+        && d.amount > 0;
+    }
+
+    // ─── Members ─────────────────────────────────────────────────────────────
+
+    match /members/{uid} {
+      // Read: owner always | active members can read other active members | admin
+      allow read: if isOwner(uid)
+        || (isActiveMember() && resource.data.status == 'active')
+        || isAdmin();
+
+      // Create: only the auth user creates their own member doc
+      allow create: if isOwner(uid) && isValidMemberCreate();
+
+      // Update: owner (restricted fields) or admin (unrestricted)
+      allow update: if isAdmin()
+        || (isOwner(uid) && isValidMemberUpdate());
+
+      // Delete: admin only
+      allow delete: if isAdmin();
+    }
+
+    // ─── Payments ─────────────────────────────────────────────────────────────
+
+    match /payments/{paymentId} {
+      // Read: owner reads own payments | admin reads all
+      allow read: if isAuthenticated()
+        && (resource.data.uid == request.auth.uid || isAdmin());
+
+      // Create: authenticated user creates payment for themselves
+      allow create: if isAuthenticated() && isValidPaymentCreate();
+
+      // Update: admin only (verify/reject)
+      allow update: if isAdmin();
+
+      // Delete: admin only
+      allow delete: if isAdmin();
+    }
+
+    // ─── App Config ───────────────────────────────────────────────────────────
+
+    match /app_config/{docId} {
+      // Any authenticated user can read (needed for registration fee + bKash number)
+      allow read: if isAuthenticated();
+      // Only admin can write
+      allow write: if isAdmin();
+    }
+
+    // ─── Deletion Requests ────────────────────────────────────────────────────
+
+    match /deletion_requests/{uid} {
+      // Owner creates their own deletion request
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasAll(['uid', 'requestedAt', 'status']);
+      // Admin manages all
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ─── Admin Activity Logs ──────────────────────────────────────────────────
+
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ─── Deny all other paths ─────────────────────────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

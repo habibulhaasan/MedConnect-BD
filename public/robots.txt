@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /*/admin/
+Disallow: /*/dashboard/
+Disallow: /*/profile/
+Disallow: /*/settings/
+Disallow: /*/favorites/
+Disallow: /api/
+
+Sitemap: https://medconnect.bd/sitemap.xml
