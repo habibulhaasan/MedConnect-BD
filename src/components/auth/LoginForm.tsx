@@ -22,7 +22,7 @@ import {
 import { loginSchema, passwordResetSchema } from '@/lib/validations/auth'
 import type { LoginValues, PasswordResetValues } from '@/lib/validations/auth'
 import { signInWithEmail, sendPasswordReset } from '@/lib/firebase/auth'
-import { getMember } from '@/lib/firebase/firestore'
+import { getMyMemberProfile } from '@/lib/firebase/member-api'
 import { useAuthStore } from '@/stores/authStore'
 import { cn } from '@/lib/utils/cn'
 
@@ -70,7 +70,7 @@ export function LoginForm() {
       setIsAdmin(isAdmin)
 
       // Fetch member profile
-      const member = await getMember(user.uid)
+      const member = await getMyMemberProfile()
       setMember(member)
 
       // Admin bypass — always goes to admin dashboard

@@ -103,7 +103,7 @@ export function VerifyPaymentModal({
 
   const copyTrxId = async () => {
     if (!payment) return
-    await copyToClipboard(payment.bkashTrxId)
+    await copyToClipboard(payment.transactionId)
     setCopiedTrx(true)
     setTimeout(() => setCopiedTrx(false), 2000)
     toast.success(t('common.copied'))
@@ -160,7 +160,7 @@ export function VerifyPaymentModal({
               </p>
               <div className="flex items-center gap-3">
                 <span className="text-2xl font-bold font-mono text-bkash tracking-wider flex-1">
-                  {payment.bkashTrxId}
+                  {payment.transactionId}
                 </span>
                 <button
                   type="button"
@@ -179,7 +179,7 @@ export function VerifyPaymentModal({
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
                   <p className="text-xs text-zinc-500">{t('payment.senderNumberLabel')}</p>
-                  <p className="text-sm font-semibold text-zinc-800">{payment.bkashSenderNumber}</p>
+                  <p className="text-sm font-semibold text-zinc-800">{payment.senderNumber}</p>
                 </div>
                 <div>
                   <p className="text-xs text-zinc-500">{t('payment.amount')}</p>

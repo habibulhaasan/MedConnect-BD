@@ -64,6 +64,9 @@ export const ALL_BLOOD_GROUPS: BloodGroup[] = [
   'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
 ]
 
+// ─── New Payment Method Enum ───────────────────────────────────────────────
+export type PaymentMethod = 'bkash' | 'nagad' | 'rocket' | 'cash' | 'bank'
+
 // ─── Core Interfaces ───────────────────────────────────────────────────────
 
 export interface Member {
@@ -96,9 +99,14 @@ export interface PaymentSubmission {
   memberName: string
   mobile: string
   amount: number
-  bkashTrxId: string            // user-entered bKash Transaction ID e.g. "AB12345678"
-  bkashSenderNumber: string     // number they sent FROM
-  screenshotBase64?: string     // optional payment screenshot, compressed
+  // New generic fields
+  method: PaymentMethod
+  transactionId: string          // e.g., bkashTrxId, nagadTrxId, etc.
+  senderNumber: string          // number the payment was sent from
+  // Legacy fields retained for compatibility (optional)
+  bkashTrxId?: string
+  bkashSenderNumber?: string
+  screenshotBase64?: string
   status: PaymentStatus
   adminNote?: string
   submittedAt: string
@@ -189,13 +197,15 @@ export interface RegistrationFormData {
 }
 
 export interface PaymentFormData {
-  bkashTrxId: string
-  bkashSenderNumber: string
+  method: PaymentMethod
+  transactionId: string
+  senderNumber: string
   amount: number
   screenshotBase64?: string
 }
 
 export interface ProfileEditFormData {
+  // ... unchanged ...
   fullName: string
   fullNameBn: string
   institution: string

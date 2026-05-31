@@ -194,7 +194,22 @@
     "screenshotAlt": "Payment screenshot",
     "screenshotUploaded": "Screenshot attached",
     "screenshotHint": "Tap to attach payment screenshot",
-    "submitVerification": "Submit for Verification"
+    "manualTitle": "Manual Payment Verification",
+    "manualSubtitle": "Submit your registration for admin review",
+    "manualReviewTitle": "No online payment gateway is required",
+    "manualReviewDesc": "After submitting this form, an admin will contact you if any payment information is needed and then verify your account manually.",
+    "manualStep1": "Submit your registration details for manual review.",
+    "manualStep2": "Add a payment reference or screenshot only if you already have one.",
+    "manualStep3": "Admin will review your registration and activate the account after confirmation.",
+    "manualFormTitle": "Manual payment information",
+    "manualReferenceLabel": "Payment Reference",
+    "manualReferencePlaceholder": "Optional reference",
+    "manualReferenceHint": "Leave blank if you do not have a transaction or receipt number.",
+    "manualContactLabel": "Payment Contact Number",
+    "submitVerification": "Submit for Verification",
+    "methodLabel": "Payment Method",
+    "transactionIdLabel": "Transaction ID",
+    "transactionIdPlaceholder": "e.g. AB12345678"
   },
   "admin": {
     "dashboard": "Admin Dashboard",

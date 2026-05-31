@@ -34,7 +34,7 @@ export function PaymentSubmissionForm() {
     formState: { errors, isSubmitting },
   } = useForm<PaymentSubmissionValues>({
     resolver: zodResolver(paymentSubmissionSchema),
-    defaultValues: { amount: 0 },
+    defaultValues: { amount: 0, method: 'bkash', transactionId: '', senderNumber: '' },
   })
 
   useEffect(() => {
@@ -199,19 +199,51 @@ export function PaymentSubmissionForm() {
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="bkashTrxId">{t('payment.trxIdLabel')}</Label>
+            <Label htmlFor="method">{t('payment.methodLabel') ?? 'Payment Method'}</Label>
+            <select id="method" className="w-full border rounded p-2" {...register('method')}>
+              <option value="bkash">bKash</option>
+              <option value="nagad">Nagad</option>
+              <option value="rocket">Rocket</option>
+              <option value="cash">Cash</option>
+              <option value="bank">Bank</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="transactionId">
+              {t('payment.transactionIdLabel') ?? 'Transaction ID'}
+              <span className="text-zinc-400 text-xs ml-1.5">({t('common.optional')})</span>
+            </Label>
             <Input
-              id="bkashTrxId"
-              placeholder={t('payment.trxIdPlaceholder')}
-              className={cn('font-mono uppercase', errors.bkashTrxId && 'border-destructive')}
-              aria-invalid={!!errors.bkashTrxId}
-              {...register('bkashTrxId', {
+              id="transactionId"
+              placeholder={t('payment.transactionIdPlaceholder') ?? ''}
+              className={cn('font-mono uppercase', errors.transactionId && 'border-destructive')}
+              aria-invalid={!!errors.transactionId}
+              {...register('transactionId', {
                 setValueAs: (v: string) => v.toUpperCase().trim(),
               })}
             />
-            {errors.bkashTrxId && (
+            {errors.transactionId && (
               <p className="text-xs text-destructive" role="alert">
-                {t(errors.bkashTrxId.message as Parameters<typeof t>[0])}
+                {t(errors.transactionId.message as Parameters<typeof t>[0])}
+              </p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="senderNumber">
+              {t('payment.senderNumberLabel') ?? 'Sender Number'}
+              <span className="text-zinc-400 text-xs ml-1.5">({t('common.optional')})</span>
+            </Label>
+            <Input
+              id="senderNumber"
+              type="tel"
+              placeholder={t('payment.senderNumberPlaceholder') ?? ''}
+              className={cn(errors.senderNumber && 'border-destructive')}
+              aria-invalid={!!errors.senderNumber}
+              {...register('senderNumber')}
+            />
+            {errors.senderNumber && (
+              <p className="text-xs text-destructive" role="alert">
+                {t(errors.senderNumber.message as Parameters<typeof t>[0])}
               </p>
             )}
           </div>

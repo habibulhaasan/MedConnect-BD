@@ -585,8 +585,8 @@ export function ProfilePage() {
                           </SelectTrigger>
                           <SelectContent>
                             {(currentDistrict?.upazilas ?? []).map((u) => (
-                              <SelectItem key={u} value={u}>
-                                {u}
+                              <SelectItem key={u.id} value={u.id}>
+                                {u.name}
                               </SelectItem>
                             ))}
                           </SelectContent>

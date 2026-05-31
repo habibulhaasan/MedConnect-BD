@@ -51,3 +51,19 @@ export async function verifyAdminToken(
   }
   return { uid: decoded.uid, email: decoded.email }
 }
+
+export async function verifyUserToken(
+  authHeader: string | null
+): Promise<{ uid: string; email?: string }> {
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw Object.assign(new Error('Missing token'), { status: 401 })
+  }
+
+  try {
+    const { adminAuth } = await initAdmin()
+    const decoded = await adminAuth.verifyIdToken(authHeader.slice(7))
+    return { uid: decoded.uid, email: decoded.email }
+  } catch {
+    throw Object.assign(new Error('Invalid token'), { status: 401 })
+  }
+}

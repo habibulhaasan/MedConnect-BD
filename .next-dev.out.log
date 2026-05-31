@@ -1,0 +1,12 @@
+
+> medconnect-bd@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.10.129:3000
+- Environments: .env.local
+✓ Ready in 3.0s
+
+ GET /bn/register 200 in 6.7s (next.js: 2.7s, proxy.ts: 827ms, application-code: 3.1s)
+[?25h

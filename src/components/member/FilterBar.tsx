@@ -2,11 +2,9 @@
 
 import { useTranslations, useLocale } from 'next-intl'
 import { useState, useEffect, useRef } from 'react'
-import { Search, X, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { Search, X, SlidersHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { DEFAULT_FILTERS, isFiltersActive } from '@/hooks/useMembers'
-import type { MemberFilters, SortOption } from '@/hooks/useMembers'
 import {
   Select,
   SelectContent,
@@ -17,11 +15,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { DEFAULT_FILTERS, isFiltersActive } from '@/hooks/useMember'
+import type { MemberFilters, SortOption } from '@/hooks/useMember'
 import { getBdDivisionBySlug, getDistrictsByDivisionSlug } from '@/lib/utils/bd-data'
-import { ALL_BLOOD_GROUPS, ALL_DIVISIONS, MT_DESIGNATIONS, ALL_DESIGNATIONS } from '@/types'
+import { ALL_BLOOD_GROUPS, ALL_DIVISIONS, MT_DESIGNATIONS } from '@/types'
 import type { BloodGroup, Designation, Division } from '@/types'
-import type { MemberFilters, SortOption } from '@/hooks/useMembers'
-import { DEFAULT_FILTERS } from '@/hooks/useMembers'
 import { cn } from '@/lib/utils/cn'
 
 interface FilterBarProps {
@@ -30,14 +28,6 @@ interface FilterBarProps {
   resultCount: number
   isLoading: boolean
 }
-
-const isFiltersActive = (f: MemberFilters): boolean =>
-  f.searchQuery !== '' ||
-  f.division !== 'all' ||
-  f.district !== '' ||
-  f.designation !== 'all' ||
-  f.bloodGroups.length > 0 ||
-  f.sort !== 'newest'
 
 export function FilterBar({
   filters,

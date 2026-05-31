@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import type { Designation, BloodGroup, Division } from '@/types'
+import type { Designation, BloodGroup, Division, PaymentMethod } from '@/types'
 
 export interface Step1Data {
   fullName: string
@@ -31,8 +31,9 @@ export interface Step3Data {
 }
 
 export interface Step4Data {
-  bkashTrxId: string
-  bkashSenderNumber: string
+  method: PaymentMethod
+  transactionId: string
+  senderNumber: string
   screenshotBase64: string
 }
 
@@ -80,8 +81,9 @@ const defaultStep3: Step3Data = {
 }
 
 const defaultStep4: Step4Data = {
-  bkashTrxId: '',
-  bkashSenderNumber: '',
+  method: 'bkash',
+  transactionId: '',
+  senderNumber: '',
   screenshotBase64: '',
 }
 

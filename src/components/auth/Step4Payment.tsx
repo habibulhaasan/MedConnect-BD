@@ -1,52 +1,37 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
-  Copy,
-  CheckCircle2,
-  Loader2,
-  AlertCircle,
-  Smartphone,
   ArrowRight,
   BadgeCheck,
+  CheckCircle2,
+  ClipboardList,
+  Loader2,
+  ReceiptText,
+  Upload,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
-import { step4Schema, type Step4Values } from '@/lib/validations/payment'
+import { step4Schema, type Step4InputValues, type Step4Values } from '@/lib/validations/payment'
+import type { PaymentMethod } from '@/types'
 import { useRegistrationStore } from '@/stores/registrationStore'
 import { useAuthStore } from '@/stores/authStore'
-import { signUpWithEmail } from '@/lib/firebase/auth'
-import { createMember, createPaymentSubmission, getAppConfig } from '@/lib/firebase/firestore'
+import { signInWithEmail, signUpWithEmail } from '@/lib/firebase/auth'
+import { submitRegistrationForReview } from '@/lib/firebase/member-api'
 import { compressPaymentScreenshot } from '@/lib/image/compress'
-import type { AppConfig } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
 interface Step4Props {
   onBack: () => void
 }
 
-const PAYMENT_STEPS_BN = [
-  'আপনার বিকাশ অ্যাপ খুলুন অথবা *247# ডায়াল করুন',
-  '"Send Money" বা "পাঠান" অপশন বেছে নিন',
-  'উপরের নম্বরে নির্ধারিত পরিমাণ টাকা পাঠান',
-  'সফল হলে বিকাশ থেকে SMS পাবেন — Transaction ID কপি করুন',
-  'নিচের ফর্মে Transaction ID পূরণ করে Submit করুন',
-]
-
-const PAYMENT_STEPS_EN = [
-  'Open your bKash app or dial *247#',
-  'Select "Send Money"',
-  'Enter the number above and send the exact amount',
-  'You will receive an SMS with a Transaction ID (TrxID)',
-  'Enter the Transaction ID in the form below and submit',
-]
+const MANUAL_REFERENCE = 'MANUAL'
 
 export function Step4Payment({ onBack }: Step4Props) {
   const t = useTranslations()
@@ -55,56 +40,23 @@ export function Step4Payment({ onBack }: Step4Props) {
   const { step1, step2, step3, step4, setStep4, reset: resetStore } = useRegistrationStore()
   const { setUser, setMember } = useAuthStore()
 
-  const [appConfig, setAppConfig] = useState<AppConfig | null>(null)
-  const [isLoadingConfig, setIsLoadingConfig] = useState(true)
-  const [configError, setConfigError] = useState(false)
-  const [copied, setCopied] = useState(false)
   const [screenshotBase64, setScreenshotBase64] = useState(step4.screenshotBase64)
   const [isCompressingScreenshot, setIsCompressingScreenshot] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const paymentSteps = locale === 'bn' ? PAYMENT_STEPS_BN : PAYMENT_STEPS_EN
-
-  useEffect(() => {
-    const load = async () => {
-      setIsLoadingConfig(true)
-      setConfigError(false)
-      try {
-        const config = await getAppConfig()
-        setAppConfig(config)
-      } catch {
-        setConfigError(true)
-        toast.error(t('errors.networkError'))
-      } finally {
-        setIsLoadingConfig(false)
-      }
-    }
-    load()
-  }, [t])
-
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm<Step4Values>({
+  } = useForm<Step4InputValues, unknown, Step4Values>({
     resolver: zodResolver(step4Schema),
     defaultValues: {
-      bkashTrxId: step4.bkashTrxId,
-      bkashSenderNumber: step4.bkashSenderNumber,
+      method: step4.method ?? 'bkash',
+      transactionId: step4.transactionId ?? '',
+      senderNumber: step4.senderNumber ?? '',
     },
   })
-
-  const copyBkashNumber = async () => {
-    if (!appConfig?.adminBkashNumber) return
-    try {
-      await navigator.clipboard.writeText(appConfig.adminBkashNumber)
-      setCopied(true)
-      toast.success(t('payment.copiedToClipboard'))
-      setTimeout(() => setCopied(false), 3000)
-    } catch {
-      toast.error(t('errors.copyFailed'))
-    }
-  }
 
   const handleScreenshotChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -129,22 +81,60 @@ export function Step4Payment({ onBack }: Step4Props) {
   const onSubmit = async (values: Step4Values) => {
     setIsSubmitting(true)
 
+    // ── Guard: ensure all prior steps have data in the store ──────────────
+    const missingField = !step1.fullName ? 'fullName'
+      : !step1.mobile ? 'mobile'
+      : !step1.password ? 'password (store may have been cleared — please restart registration)'
+      : !step2.division ? 'division'
+      : !step3.bloodGroup ? 'bloodGroup'
+      : null
+
+    if (missingField) {
+      console.error('[Step4Payment] Missing required store field:', missingField)
+      toast.error(`Missing data: ${missingField}. Please go back and re-enter.`)
+      setIsSubmitting(false)
+      return
+    }
+
+    // ── Step A: Create / sign in Firebase Auth user ───────────────────────
+    let user: import('firebase/auth').User
     try {
-      // 1. Create Firebase Auth user
-      const credential = await signUpWithEmail(step1.email || `${step1.mobile}@medconnect.bd`, step1.password)
-      const user = credential.user
+      const authEmail = step1.email?.trim()
+        ? step1.email.trim()
+        : `${step1.mobile.replace(/\D/g, '')}@medconnectbd.app`
+
+      const credential = await signUpWithEmail(authEmail, step1.password).catch((err) => {
+        if ((err as { code?: string }).code === 'auth/email-already-in-use') {
+          return signInWithEmail(authEmail, step1.password)
+        }
+        throw err
+      })
+      user = credential.user
       setUser(user)
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? 'unknown'
+      console.error('[Step4Payment] Auth error:', err)
+      const authErrorMap: Record<string, Parameters<typeof t>[0]> = {
+        'auth/email-already-in-use': 'errors.auth/email-already-in-use',
+        'auth/too-many-requests': 'errors.auth/too-many-requests',
+        'auth/invalid-credential': 'errors.auth/invalid-credential',
+        'auth/wrong-password': 'errors.auth/wrong-password',
+      }
+      toast.error(authErrorMap[code] ? t(authErrorMap[code]) : `Auth failed: ${code}`)
+      setIsSubmitting(false)
+      return
+    }
 
+    // ── Step B: Submit member + payment to Firestore via API ──────────────
+    try {
       const now = new Date().toISOString()
-
-      // 2. Create member document with pending_approval status
       const memberData = {
         fullName: step1.fullName,
-        fullNameBn: step1.fullNameBn,
+        fullNameBn: step1.fullNameBn ?? '',
         designation: step1.designation as import('@/types').Designation,
         regNumber: step1.regNumber,
         mobile: step1.mobile,
-        email: step1.email || '',
+        email: step1.email || user.email || '',
         whatsapp: step2.sameAsMobile ? step1.mobile : (step2.whatsapp || ''),
         division: step2.division as import('@/types').Division,
         district: step2.district,
@@ -160,214 +150,157 @@ export function Step4Payment({ onBack }: Step4Props) {
         updatedAt: now,
       }
 
-      await createMember(user.uid, memberData)
-      const fullMember = { ...memberData, uid: user.uid, joinedAt: now }
-      setMember(fullMember)
+      const result = await submitRegistrationForReview(
+        {
+          member: memberData,
+          payment: {
+            uid: user.uid,
+            memberName: step1.fullName,
+            mobile: step1.mobile,
+            amount: 0,
+            method: values.method,
+            transactionId: values.transactionId?.toUpperCase().trim() || MANUAL_REFERENCE,
+            senderNumber: values.senderNumber?.trim() || step1.mobile,
+            screenshotBase64: screenshotBase64 || '',
+          },
+        },
+        user
+      )
 
-      // 3. Create payment submission
-      const paymentDocId = await createPaymentSubmission({
-        uid: user.uid,
-        memberName: step1.fullName,
-        mobile: step1.mobile,
-        amount: appConfig?.registrationFee ?? 0,
-        bkashTrxId: values.bkashTrxId.toUpperCase().trim(),
-        bkashSenderNumber: values.bkashSenderNumber,
-        screenshotBase64: screenshotBase64 || '',
-      })
-
-      // 4. Reset store + redirect
+      setMember(result.member)
       resetStore()
       toast.success(t('payment.submitted'))
       router.push(`/${locale}/register/pending`)
-    } catch (error) {
-      const code = (error as { code?: string }).code ?? 'unknown'
-      const msgKey = `errors.${code}` as Parameters<typeof t>[0]
-      toast.error(
-        code !== 'unknown'
-          ? t(msgKey)
-          : t('errors.unknown')
-      )
-    } finally {
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? 'unknown'
+      const message = err instanceof Error ? err.message : String(err)
+      console.error('[Step4Payment] API/Firestore error — code:', code, '| message:', message, '| full:', err)
+      // Show the real error message so it can be reported / debugged
+      toast.error(`Submission failed: ${message} (${code})`)
       setIsSubmitting(false)
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* ── bKash Instruction Card ── */}
-      <div className="rounded-2xl border-2 border-bkash/30 bg-bkash-light overflow-hidden">
-        {/* Header */}
-        <div className="bg-bkash px-5 py-4 flex items-center gap-3">
-          <Smartphone className="text-white" size={22} />
+      <div className="rounded-2xl border border-primary-200 bg-primary-50 overflow-hidden">
+        <div className="bg-primary-600 px-5 py-4 flex items-center gap-3">
+          <ClipboardList className="text-white" size={22} />
           <div>
             <h2 className="text-white font-semibold text-base leading-tight">
-              {locale === 'bn'
-                ? 'বিকাশে পেমেন্ট করুন'
-                : 'Send Payment via bKash'}
+              {t('payment.manualTitle')}
             </h2>
             <p className="text-white/80 text-xs">
-              {locale === 'bn'
-                ? 'নিচের নির্দেশনা অনুসরণ করুন'
-                : 'Follow the steps below carefully'}
+              {t('payment.manualSubtitle')}
             </p>
           </div>
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Config loading state */}
-          {isLoadingConfig && (
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-6 w-32" />
+          <div className="rounded-xl bg-white border border-primary-100 p-4 flex items-start gap-3">
+            <BadgeCheck size={28} className="text-primary-500 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-zinc-800">
+                {t('payment.manualReviewTitle')}
+              </p>
+              <p className="text-sm text-zinc-600 leading-relaxed">
+                {t('payment.manualReviewDesc')}
+              </p>
             </div>
-          )}
+          </div>
 
-          {/* Config error */}
-          {!isLoadingConfig && configError && (
-            <div className="flex items-center gap-2 text-destructive text-sm">
-              <AlertCircle size={16} />
-              {t('errors.networkError')}
-            </div>
-          )}
-
-          {/* bKash details */}
-          {!isLoadingConfig && appConfig && (
-            <>
-              {/* Admin number — large & copyable */}
-              <div className="rounded-xl bg-white border border-bkash/20 p-4">
-                <p className="text-xs text-zinc-500 mb-1 font-medium">
-                  {t('payment.adminNumber')}
-                </p>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-2xl font-bold text-bkash tracking-wider font-mono">
-                    {appConfig.adminBkashNumber}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={copyBkashNumber}
-                    aria-label={t('payment.copyNumber')}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                      copied
-                        ? 'bg-green-100 text-green-700 border border-green-200'
-                        : 'bg-bkash-light text-bkash border border-bkash/30 hover:bg-bkash/10'
-                    )}
-                  >
-                    {copied ? (
-                      <>
-                        <CheckCircle2 size={13} />
-                        {t('payment.copied')}
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={13} />
-                        {t('payment.copy')}
-                      </>
-                    )}
-                  </button>
-                </div>
-                <p className="text-xs text-zinc-500 mt-1">
-                  {t('payment.adminName')}: {' '}
-                  <span className="font-medium text-zinc-700">
-                    {appConfig.adminBkashAccountName}
-                  </span>
-                </p>
-              </div>
-
-              {/* Amount */}
-              <div className="rounded-xl bg-white border border-bkash/20 p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-zinc-500 font-medium">{t('payment.amount')}</p>
-                  <p className="text-3xl font-bold text-bkash mt-0.5">
-                    ৳{appConfig.registrationFee}
-                  </p>
-                </div>
-                <BadgeCheck size={40} className="text-bkash/30" />
-              </div>
-            </>
-          )}
-
-          {/* Step-by-step instructions */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">
               {t('payment.instructions')}
             </p>
             <ol className="space-y-2">
-              {paymentSteps.map((step, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-bkash text-white text-xs font-bold flex items-center justify-center mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span className="text-sm text-zinc-700">{step}</span>
-                </li>
-              ))}
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">
+                  1
+                </span>
+                <span className="text-sm text-zinc-700">{t('payment.manualStep1')}</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">
+                  2
+                </span>
+                <span className="text-sm text-zinc-700">{t('payment.manualStep2')}</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">
+                  3
+                </span>
+                <span className="text-sm text-zinc-700">{t('payment.manualStep3')}</span>
+              </li>
             </ol>
           </div>
         </div>
       </div>
 
-      {/* ── Submission Form ── */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
         <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 border-b border-zinc-100 pb-3">
           <ArrowRight size={16} className="text-primary-600" />
-          {t('payment.formTitle')}
+          {t('payment.manualFormTitle')}
         </div>
 
-        {/* TrxID */}
         <div className="space-y-1.5">
-          <Label htmlFor="bkashTrxId">
-            {t('payment.trxIdLabel')}
-            <span className="text-destructive ml-0.5">*</span>
+          <Label htmlFor="method">{t('payment.methodLabel') ?? 'Payment Method'}</Label>
+          <select id="method" className="w-full border rounded p-2" {...register('method')}>
+            <option value="bkash">bKash</option>
+            <option value="nagad">Nagad</option>
+            <option value="rocket">Rocket</option>
+            <option value="cash">Cash</option>
+            <option value="bank">Bank</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="transactionId">
+            {t('payment.transactionIdLabel') ?? 'Transaction ID'}
+            <span className="text-zinc-400 text-xs ml-1.5">({t('common.optional')})</span>
           </Label>
           <Input
-            id="bkashTrxId"
-            placeholder="AB12345678"
+            id="transactionId"
+            placeholder={t('payment.transactionIdPlaceholder') ?? ''}
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck={false}
-            aria-invalid={!!errors.bkashTrxId}
+            aria-invalid={!!errors.transactionId}
             className={cn(
               'font-mono uppercase tracking-widest text-base',
-              errors.bkashTrxId && 'border-destructive'
+              errors.transactionId && 'border-destructive'
             )}
-            {...register('bkashTrxId', {
+            {...register('transactionId', {
               setValueAs: (v: string) => v.toUpperCase().replace(/\s/g, ''),
             })}
           />
-          <p className="text-xs text-zinc-400">
-            {t('payment.trxIdHint')}
-          </p>
-          {errors.bkashTrxId && (
+          {errors.transactionId && (
             <p className="text-xs text-destructive" role="alert">
-              {t(errors.bkashTrxId.message as Parameters<typeof t>[0])}
+              {t(errors.transactionId.message as Parameters<typeof t>[0])}
             </p>
           )}
         </div>
 
-        {/* Sender number */}
         <div className="space-y-1.5">
-          <Label htmlFor="bkashSenderNumber">
-            {t('payment.senderNumberLabel')}
-            <span className="text-destructive ml-0.5">*</span>
+          <Label htmlFor="senderNumber">
+            {t('payment.senderNumberLabel') ?? 'Sender Number'}
+            <span className="text-zinc-400 text-xs ml-1.5">({t('common.optional')})</span>
           </Label>
           <Input
-            id="bkashSenderNumber"
+            id="senderNumber"
             type="tel"
             inputMode="numeric"
             placeholder="01XXXXXXXXX"
-            aria-invalid={!!errors.bkashSenderNumber}
-            className={cn(errors.bkashSenderNumber && 'border-destructive')}
-            {...register('bkashSenderNumber')}
+            aria-invalid={!!errors.senderNumber}
+            className={cn(errors.senderNumber && 'border-destructive')}
+            {...register('senderNumber')}
           />
-          {errors.bkashSenderNumber && (
+          {errors.senderNumber && (
             <p className="text-xs text-destructive" role="alert">
-              {t(errors.bkashSenderNumber.message as Parameters<typeof t>[0])}
+              {t(errors.senderNumber.message as Parameters<typeof t>[0])}
             </p>
           )}
         </div>
 
-        {/* Screenshot — optional */}
         <div className="space-y-2">
           <Label htmlFor="paymentScreenshot">
             {t('payment.screenshotLabel')}
@@ -406,7 +339,7 @@ export function Step4Payment({ onBack }: Step4Props) {
               {isCompressingScreenshot ? (
                 <Loader2 size={20} className="text-primary-500 animate-spin" />
               ) : (
-                <Copy size={20} className="text-zinc-300" />
+                <Upload size={20} className="text-zinc-300" />
               )}
               <span className="text-xs text-zinc-500">
                 {isCompressingScreenshot ? t('common.loading') : t('payment.screenshotHint')}
@@ -424,7 +357,6 @@ export function Step4Payment({ onBack }: Step4Props) {
           />
         </div>
 
-        {/* Navigation */}
         <div className="flex gap-3 pt-2">
           <Button
             type="button"
@@ -437,8 +369,8 @@ export function Step4Payment({ onBack }: Step4Props) {
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting || isLoadingConfig || !appConfig}
-            className="flex-1 h-12 bg-bkash hover:bg-bkash-dark text-white font-semibold"
+            disabled={isSubmitting || isCompressingScreenshot}
+            className="flex-1 h-12 bg-primary-600 hover:bg-primary-700 text-white font-semibold"
           >
             {isSubmitting ? (
               <>
@@ -446,7 +378,10 @@ export function Step4Payment({ onBack }: Step4Props) {
                 {t('payment.submitting')}
               </>
             ) : (
-              t('payment.submitVerification')
+              <>
+                <ReceiptText size={16} className="mr-2" />
+                {t('payment.submitVerification')}
+              </>
             )}
           </Button>
         </div>

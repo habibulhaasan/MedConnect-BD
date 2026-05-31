@@ -6,16 +6,10 @@ import { PageHeader } from '@/components/shared/PageHeader'
 import { FilterBar } from './FilterBar'
 import { MembersGrid } from './MembersGrid'
 import { MemberDetailModal } from './MemberDetailModal'
-import { useMembers, DEFAULT_FILTERS } from '@/hooks/useMembers'
+import { useMembers, DEFAULT_FILTERS, isFiltersActive } from '@/hooks/useMember'
 import { useFavorites } from '@/hooks/useFavorites'
-import type { Member } from '@/types'
-import { isFiltersActive } from './FilterBar'
-import type { MemberFilters } from '@/hooks/useMembers'
-import { useMembers, DEFAULT_FILTERS, isFiltersActive } from '@/hooks/useMembers'
-// Remove local filtersActive computation, use isFiltersActive(filters) instead
-
-// Re-export for FilterBar internal use
-export { isFiltersActive }
+import type { Member, } from '@/types'
+import type { MemberFilters } from '@/hooks/useMember'
 
 export function MembersPage() {
   const t = useTranslations()

@@ -194,7 +194,22 @@
     "screenshotAlt": "পেমেন্টের স্ক্রিনশট",
     "screenshotUploaded": "স্ক্রিনশট যোগ হয়েছে",
     "screenshotHint": "পেমেন্টের স্ক্রিনশট যোগ করতে ট্যাপ করুন",
-    "submitVerification": "যাচাইয়ের জন্য জমা দিন"
+    "manualTitle": "ম্যানুয়াল পেমেন্ট যাচাই",
+    "manualSubtitle": "অ্যাডমিন রিভিউর জন্য নিবন্ধন জমা দিন",
+    "manualReviewTitle": "অনলাইন পেমেন্ট গেটওয়ে দরকার নেই",
+    "manualReviewDesc": "এই ফর্ম জমা দেওয়ার পর পেমেন্ট তথ্য দরকার হলে অ্যাডমিন আপনার সাথে যোগাযোগ করবেন এবং ম্যানুয়ালি অ্যাকাউন্ট যাচাই করবেন।",
+    "manualStep1": "ম্যানুয়াল রিভিউর জন্য আপনার নিবন্ধন জমা দিন।",
+    "manualStep2": "পেমেন্ট রেফারেন্স বা স্ক্রিনশট থাকলে শুধু সেটি যোগ করুন।",
+    "manualStep3": "অ্যাডমিন নিবন্ধন যাচাই করে নিশ্চিত হওয়ার পর অ্যাকাউন্ট সক্রিয় করবেন।",
+    "manualFormTitle": "ম্যানুয়াল পেমেন্ট তথ্য",
+    "manualReferenceLabel": "পেমেন্ট রেফারেন্স",
+    "manualReferencePlaceholder": "ঐচ্ছিক রেফারেন্স",
+    "manualReferenceHint": "Transaction ID বা রসিদ নম্বর না থাকলে খালি রাখুন।",
+    "manualContactLabel": "পেমেন্ট যোগাযোগ নম্বর",
+    "submitVerification": "যাচাইয়ের জন্য জমা দিন",
+    "methodLabel": "পেমেন্ট পদ্ধতি",
+    "transactionIdLabel": "ট্রানজেকশন আইডি",
+    "transactionIdPlaceholder": "যেমন: AB12345678"
   },
   "admin": {
     "dashboard": "অ্যাডমিন ড্যাশবোর্ড",

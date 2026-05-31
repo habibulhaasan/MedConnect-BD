@@ -290,7 +290,6 @@ export function useMembers(): UseMembersReturn {
   }
 }
 
-// At the bottom of useMembers.ts, add:
 export function isFiltersActive(f: MemberFilters): boolean {
   return (
     f.searchQuery !== '' ||
@@ -300,4 +299,36 @@ export function isFiltersActive(f: MemberFilters): boolean {
     f.bloodGroups.length > 0 ||
     f.sort !== 'newest'
   )
+}
+
+// ─── useMember — single-user profile update hook ─────────────────────────────
+
+import { updateDoc, doc } from 'firebase/firestore'
+import { useAuthStore } from '@/stores/authStore'
+
+interface UseMemberReturn {
+  updateProfile: (data: Partial<Omit<Member, 'uid' | 'joinedAt' | 'status' | 'isVerified' | 'regNumber' | 'favorites'>>) => Promise<void>
+  isUpdating: boolean
+}
+
+export function useMember(): UseMemberReturn {
+  const [isUpdating, setIsUpdating] = useState(false)
+  const { member, setMember } = useAuthStore()
+
+  const updateProfile = useCallback(async (
+    data: Partial<Omit<Member, 'uid' | 'joinedAt' | 'status' | 'isVerified' | 'regNumber' | 'favorites'>>
+  ) => {
+    if (!member?.uid) throw new Error('Not authenticated')
+    setIsUpdating(true)
+    try {
+      const ref = doc(db, 'members', member.uid)
+      const payload = { ...data, updatedAt: new Date().toISOString() }
+      await updateDoc(ref, payload as Record<string, unknown>)
+      setMember({ ...member, ...payload })
+    } finally {
+      setIsUpdating(false)
+    }
+  }, [member, setMember])
+
+  return { updateProfile, isUpdating }
 }
