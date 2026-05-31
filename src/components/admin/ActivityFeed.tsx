@@ -78,7 +78,7 @@ export function ActivityFeed() {
               </p>
               <p className="text-xs text-zinc-500">
                 {t(cfg.labelKey as Parameters<typeof t>[0])} — TrxID:{' '}
-                <span className="font-mono font-semibold">{act.bkashTrxId}</span>
+                <span className="font-mono font-semibold">{act.transactionId ?? act.bkashTrxId}</span>
               </p>
             </div>
             <span className="text-xs text-zinc-400 flex-shrink-0 mt-0.5">

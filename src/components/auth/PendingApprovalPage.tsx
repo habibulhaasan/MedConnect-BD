@@ -109,7 +109,7 @@ export function PendingApprovalPage() {
       return
     }
     getPaymentSubmission(user.uid)
-      .then((p) => setTrxId(p?.bkashTrxId ?? null))
+      .then((p) => setTrxId(p?.transactionId ?? p?.bkashTrxId ?? null))
       .catch(() => setTrxId(null))
       .finally(() => setLoadingTrx(false))
   }, [user?.uid])

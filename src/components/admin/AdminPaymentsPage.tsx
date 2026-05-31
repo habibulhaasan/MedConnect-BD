@@ -47,9 +47,9 @@ export function AdminPaymentsPage() {
       result = result.filter(
         (p) =>
           p.memberName.toLowerCase().includes(q) ||
-          p.bkashTrxId.toLowerCase().includes(q) ||
+          (p.transactionId ?? p.bkashTrxId ?? '').toLowerCase().includes(q) ||
           p.mobile.includes(q) ||
-          p.bkashSenderNumber.includes(q)
+          (p.senderNumber ?? p.bkashSenderNumber ?? '').includes(q)
       )
     }
     return result

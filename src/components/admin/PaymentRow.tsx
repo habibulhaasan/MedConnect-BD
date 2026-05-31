@@ -44,11 +44,11 @@ export function PaymentRow({ payment, onVerify }: PaymentRowProps) {
           <p className="text-xs text-zinc-500 font-medium">{t('admin.trxId')}</p>
           <div className="flex items-center gap-1">
             <span className="text-sm font-mono font-bold text-bkash">
-              {payment.bkashTrxId}
-            </span>
-            <CopyButton text={payment.bkashTrxId} size={12} />
-          </div>
-          <p className="text-xs text-zinc-400">{t('payment.senderNumberLabel')}: {payment.bkashSenderNumber}</p>
+              {payment.transactionId ?? payment.bkashTrxId}
+                        </span>
+            <CopyButton text={payment.transactionId ?? payment.bkashTrxId ?? ''} size={12} />
+                    </div>
+          <p className="text-xs text-zinc-400">{t('payment.senderNumberLabel')}: {payment.senderNumber ?? payment.bkashSenderNumber}</p>
         </div>
 
         <div>

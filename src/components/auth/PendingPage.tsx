@@ -190,12 +190,12 @@ export function PendingPage() {
               <div className="flex items-center justify-between">
                 <span className="text-zinc-500">{t('admin.trxId')}</span>
                 <span className="font-mono font-semibold text-zinc-800 bg-zinc-100 px-2 py-0.5 rounded text-xs">
-                  {payment.bkashTrxId}
+                  {payment.transactionId ?? payment.bkashTrxId}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-zinc-500">{t('payment.senderNumberLabel')}</span>
-                <span className="font-medium text-zinc-700">{payment.bkashSenderNumber}</span>
+                <span className="font-medium text-zinc-700">{payment.senderNumber ?? payment.bkashSenderNumber}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-zinc-500">{t('payment.amount')}</span>
