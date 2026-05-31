@@ -89,7 +89,11 @@
     "selectDivisionFirst": "আগে বিভাগ নির্বাচন করুন",
     "selectDistrictFirst": "আগে জেলা নির্বাচন করুন",
     "sameAsMobile": "মোবাইলের মতো",
-    "photoSize": "ছবির আকার: {size} KB ✓"
+    "photoSize": "ছবির আকার: {size} KB ✓",
+    "contactSupport": "সাপোর্টে যোগাযোগ করুন",
+    "pendingDesc": "আপনার নিবন্ধন পর্যালোচনাধীন। অনুমোদিত হলে আমরা আপনাকে জানাব।",
+    "pendingEta": "সাধারণত ১–২ কার্যদিবস সময় লাগে।",
+    "pendingTitle": "নিবন্ধন অপেক্ষমাণ"
   },
   "profile": {
     "title": "আমার প্রোফাইল",
@@ -209,7 +213,8 @@
     "submitVerification": "যাচাইয়ের জন্য জমা দিন",
     "methodLabel": "পেমেন্ট পদ্ধতি",
     "transactionIdLabel": "ট্রানজেকশন আইডি",
-    "transactionIdPlaceholder": "যেমন: AB12345678"
+    "transactionIdPlaceholder": "যেমন: AB12345678",
+    "noTrxFound": "কোনো ট্রানজেকশন পাওয়া যায়নি"
   },
   "admin": {
     "dashboard": "অ্যাডমিন ড্যাশবোর্ড",
@@ -309,7 +314,8 @@
     "preview": "পূর্বরূপ",
     "newThisWeek": "এই সপ্তাহে নতুন",
     "thisWeek": "এই সপ্তাহে",
-    "verified": "যাচাইকৃত সদস্য"
+    "verified": "যাচাইকৃত সদস্য",
+    "totalRevenue": "মোট আয়"
   },
   "common": {
     "save": "সংরক্ষণ",
@@ -457,5 +463,35 @@
     "deletionConfirmDesc": "এটি অ্যাডমিনের কাছে মুছে ফেলার অনুরোধ পাঠাবে। মুছে ফেলার আগে আপনার অ্যাকাউন্ট পর্যালোচনা করা হবে। এই কাজ পূর্বাবস্থায় ফেরানো যাবে না।",
     "deletionRequested": "মুছে ফেলার অনুরোধ জমা হয়েছে। আমরা শীঘ্রই পর্যালোচনা করব।",
     "confirmDeletion": "হ্যাঁ, অনুরোধ পাঠান"
-  }
+  },
+  "appName": "মেডকানেক্ট বিডি",
+  "browseMembers": "সদস্য দেখুন",
+  "callNow": "এখনই কল করুন",
+  "cancel": "বাতিল",
+  "clearFilters": "ফিল্টার মুছুন",
+  "confirm": "নিশ্চিত করুন",
+  "copied": "কপি হয়েছে!",
+  "copy": "কপি করুন",
+  "copyFailed": "কপি ব্যর্থ হয়েছে",
+  "division": "বিভাগ",
+  "email": "ইমেইল",
+  "empty": "কোনো ফলাফল নেই",
+  "emptyHint": "অনুগ্রহ করে আপনার অনুসন্ধান বা ফিল্টার পরিবর্তন করুন।",
+  "errorDetails": "ত্রুটির বিবরণ",
+  "fullName": "পূর্ণ নাম",
+  "goHome": "হোমে যান",
+  "joinedAt": "যোগদান",
+  "loadMore": "আরও দেখুন",
+  "noMembers": "কোনো সদস্য পাওয়া যায়নি",
+  "noMembersHint": "ভিন্ন অনুসন্ধান শব্দ ব্যবহার করুন।",
+  "pageNotFound": "পেজ পাওয়া যায়নি",
+  "pageNotFoundDesc": "আপনি যে পেজটি খুঁজছেন তা বিদ্যমান নেই।",
+  "reason": "কারণ",
+  "reportError": "ত্রুটি রিপোর্ট করুন",
+  "somethingWentWrong": "অপ্রত্যাশিত সমস্যা হয়েছে",
+  "somethingWentWrongDesc": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। আবার চেষ্টা করুন।",
+  "tryAgain": "আবার চেষ্টা করুন",
+  "verified": "যাচাইকৃত",
+  "verifiedMember": "যাচাইকৃত সদস্য",
+  "whatsapp": "হোয়াটসঅ্যাপ"
 }

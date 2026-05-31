@@ -89,7 +89,11 @@
     "selectDivisionFirst": "Select a division first",
     "selectDistrictFirst": "Select a district first",
     "sameAsMobile": "Same as mobile",
-    "photoSize": "Photo size: {size} KB ✓"
+    "photoSize": "Photo size: {size} KB ✓",
+    "contactSupport": "Contact Support",
+    "pendingDesc": "Your registration is under review. We will notify you once approved.",
+    "pendingEta": "This usually takes 1–2 business days.",
+    "pendingTitle": "Registration Pending"
   },
   "profile": {
     "title": "My Profile",
@@ -209,7 +213,8 @@
     "submitVerification": "Submit for Verification",
     "methodLabel": "Payment Method",
     "transactionIdLabel": "Transaction ID",
-    "transactionIdPlaceholder": "e.g. AB12345678"
+    "transactionIdPlaceholder": "e.g. AB12345678",
+    "noTrxFound": "No transaction found"
   },
   "admin": {
     "dashboard": "Admin Dashboard",
@@ -309,7 +314,8 @@
     "preview": "Preview",
     "newThisWeek": "New This Week",
     "thisWeek": "this week",
-    "verified": "Verified Members"
+    "verified": "Verified Members",
+    "totalRevenue": "Total Revenue"
   },
   "common": {
     "save": "Save",
@@ -457,5 +463,35 @@
     "deletionConfirmDesc": "This will send a deletion request to admin. Your account will be reviewed before deletion. This action cannot be undone.",
     "deletionRequested": "Deletion request submitted. We'll review it shortly.",
     "confirmDeletion": "Yes, Request Deletion"
-  }
+  },
+  "appName": "MedConnect BD",
+  "browseMembers": "Browse Members",
+  "callNow": "Call Now",
+  "cancel": "Cancel",
+  "clearFilters": "Clear Filters",
+  "confirm": "Confirm",
+  "copied": "Copied!",
+  "copy": "Copy",
+  "copyFailed": "Copy failed",
+  "division": "Division",
+  "email": "Email",
+  "empty": "No results",
+  "emptyHint": "Try adjusting your search or filters.",
+  "errorDetails": "Error Details",
+  "fullName": "Full Name",
+  "goHome": "Go Home",
+  "joinedAt": "Joined",
+  "loadMore": "Load More",
+  "noMembers": "No members found",
+  "noMembersHint": "Try a different search term.",
+  "pageNotFound": "Page Not Found",
+  "pageNotFoundDesc": "The page you are looking for does not exist.",
+  "reason": "Reason",
+  "reportError": "Report Error",
+  "somethingWentWrong": "Something went wrong",
+  "somethingWentWrongDesc": "An unexpected error occurred. Please try again.",
+  "tryAgain": "Try Again",
+  "verified": "Verified",
+  "verifiedMember": "Verified Member",
+  "whatsapp": "WhatsApp"
 }
