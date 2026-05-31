@@ -35,18 +35,15 @@ export function RegisterForm() {
 
   // ── Step handlers ────────────────────────────────────────────────────────
 
-  const handleStep1 = (data: Step1Values) => {
-    setRegState((prev) => ({ ...prev, step1: data }))
+  const handleStep1 = () => {
     setCurrentStep(2)
   }
 
-  const handleStep2 = (data: Step2Values) => {
-    setRegState((prev) => ({ ...prev, step2: data }))
+  const handleStep2 = () => {
     setCurrentStep(3)
   }
 
-  const handleStep3 = (data: Step3Values) => {
-    setRegState((prev) => ({ ...prev, step3: data }))
+  const handleStep3 = () => {
     setCurrentStep(4)
   }
 
@@ -101,9 +98,10 @@ export function RegisterForm() {
         uid: user.uid,
         memberName: step1.fullName,
         mobile: step1.mobile,
-        amount: 0, // will be filled from appConfig but we pass the field
-        bkashTrxId: paymentData.bkashTrxId,
-        bkashSenderNumber: paymentData.bkashSenderNumber,
+        amount: 0,
+        method: paymentData.method,
+        transactionId: paymentData.transactionId ?? '',
+        senderNumber: paymentData.senderNumber ?? '',
         screenshotBase64: paymentData.screenshotBase64,
       })
 

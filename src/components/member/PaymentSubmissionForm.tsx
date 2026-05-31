@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { paymentSubmissionSchema, type PaymentSubmissionValues } from '@/lib/validations/payment'
+import { paymentSubmissionSchema, type PaymentSubmissionInputValues, type PaymentSubmissionValues } from '@/lib/validations/payment'
 import { createPaymentSubmission, getAppConfig, getPaymentSubmission, updateMember } from '@/lib/firebase/firestore'
 import { useAuthStore } from '@/stores/authStore'
 import { compressPaymentScreenshot } from '@/lib/image/compress'
@@ -32,7 +32,7 @@ export function PaymentSubmissionForm() {
     handleSubmit,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<PaymentSubmissionValues>({
+  } = useForm<PaymentSubmissionInputValues, unknown, PaymentSubmissionValues>({
     resolver: zodResolver(paymentSubmissionSchema),
     defaultValues: { amount: 0, method: 'bkash', transactionId: '', senderNumber: '' },
   })
@@ -85,8 +85,9 @@ export function PaymentSubmissionForm() {
         memberName: member.fullName,
         mobile: member.mobile,
         amount: values.amount,
-        bkashTrxId: values.bkashTrxId,
-        bkashSenderNumber: values.bkashSenderNumber,
+        method: values.method,
+        transactionId: values.transactionId ?? '',
+        senderNumber: values.senderNumber ?? '',
         screenshotBase64,
       })
 
@@ -244,23 +245,6 @@ export function PaymentSubmissionForm() {
             {errors.senderNumber && (
               <p className="text-xs text-destructive" role="alert">
                 {t(errors.senderNumber.message as Parameters<typeof t>[0])}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="bkashSenderNumber">{t('payment.senderNumberLabel')}</Label>
-            <Input
-              id="bkashSenderNumber"
-              type="tel"
-              placeholder={t('payment.senderNumberPlaceholder')}
-              className={cn(errors.bkashSenderNumber && 'border-destructive')}
-              aria-invalid={!!errors.bkashSenderNumber}
-              {...register('bkashSenderNumber')}
-            />
-            {errors.bkashSenderNumber && (
-              <p className="text-xs text-destructive" role="alert">
-                {t(errors.bkashSenderNumber.message as Parameters<typeof t>[0])}
               </p>
             )}
           </div>
