@@ -56,7 +56,7 @@ function toPayment(id: string, d: Record<string, unknown>): PaymentSubmission {
     memberName: (d['memberName'] as string) ?? '',
     mobile: (d['mobile'] as string) ?? '',
     amount: (d['amount'] as number) ?? 0,
-    method: (d['method'] as string) ?? 'bkash',
+    method: ((d['method'] as string) ?? 'bkash') as import('@/types').PaymentMethod,
     transactionId: (d['transactionId'] as string) ?? (d['bkashTrxId'] as string) ?? '',
     senderNumber: (d['senderNumber'] as string) ?? (d['bkashSenderNumber'] as string) ?? '',
     screenshotBase64: d['screenshotBase64'] as string | undefined,
