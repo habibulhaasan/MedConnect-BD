@@ -11,9 +11,8 @@
     "strict": true,
     "noEmit": false,
     "esModuleInterop": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
@@ -38,8 +37,8 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "scripts/**/*.ts"
-, "scripts/set-admin.js"  ],
+  ],
   "exclude": [
-    "node_modules","jest.config.ts", "jest.setup.ts"
+    "node_modules"
   ]
 }
