@@ -53,7 +53,7 @@ export default function DashboardHomePage() {
             </li>
           ))}
         </ul>
-        <Button className="w-full" variant="primary">
+        <Button className="w-full" variant="default">
           {locale === 'bn' ? 'শুরু করুন' : 'Get Started'}
         </Button>
       </CardContent>
@@ -103,7 +103,7 @@ export default function DashboardHomePage() {
               ? 'বাংলাদেশের স্বাস্থ্য পেশাজীবীদের সহজে সংযুক্ত করতে একটি সম্পূর্ণ সমাধান।'
               : 'A complete solution to connect health professionals across Bangladesh.'}
           </p>
-          <Button asChild variant="primary" className="inline-flex items-center px-6 py-3 mr-4">
+          <Button asChild variant="default" className="inline-flex items-center px-6 py-3 mr-4">
             <a href={`/${locale}/register`}> {locale === 'bn' ? 'শুরু করুন' : 'Get Started'} </a>
           </Button>
           <Button asChild variant="secondary" className="inline-flex items-center px-6 py-3">
@@ -202,7 +202,7 @@ export default function DashboardHomePage() {
               ? 'অধিকাংশ স্বাস্থ্য পেশাজীবীর সঙ্গে সংযুক্ত হয়ে রোগী সেবা উন্নত করুন।'
               : 'Connect with health professionals and improve patient care.'}
           </p>
-          <Button asChild variant="primary" className="inline-flex items-center px-8 py-3">
+          <Button asChild variant="default" className="inline-flex items-center px-8 py-3">
             <a href={`/${locale}/register`}> {locale === 'bn' ? 'এখনই যোগ দিন' : 'Join Now'} </a>
           </Button>
         </div>
