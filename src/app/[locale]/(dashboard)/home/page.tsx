@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { Check, Star, Zap, Users, Gift, CreditCard, LayoutGrid, Globe, Phone, MessageCircle } from 'lucide-react'
 import { useRouter, usePathname } from 'next/navigation'
 
