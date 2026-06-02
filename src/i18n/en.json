@@ -347,7 +347,8 @@
     "copied": "Copied!",
     "copy": "Copy",
     "copyFailed": "Copy failed. Please try manually.",
-    "reason": "Reason"
+    "reason": "Reason",
+    "now": "now"
   },
   "errors": {
     "required": "This field is required",
@@ -433,6 +434,22 @@
     "whatNextDesc": "Our admin team will verify your bKash transaction. Once verified, your account will be activated and you can log in.",
     "needHelp": "Need help?",
     "contactSupport": "Contact support"
+  },
+  "landing": {
+    "feature1Title": "Find Members",
+    "feature1Desc": "Connect with thousands of medical professionals in our network.",
+    "feature2Title": "Filter by Criteria",
+    "feature2Desc": "Easily find members by division, designation, location, and more.",
+    "feature3Title": "Direct Contact",
+    "feature3Desc": "Reach out to members directly via phone and WhatsApp.",
+    "feature4Title": "Blood Donation Network",
+    "feature4Desc": "Get help from community members when blood donation is needed.",
+    "step1Title": "Create Account",
+    "step1Desc": "Register and create your professional profile in simple steps.",
+    "step2Title": "Verify Information",
+    "step2Desc": "Verify your credentials, then complete payment to activate.",
+    "step3Title": "Start Networking",
+    "step3Desc": "Browse the member directory and build professional connections."
   },
   "home": {
     "totalMembers": "Total Members",
